@@ -66,7 +66,8 @@ library_sources = [
 	'arvfakecamera.c',
 	'arvgvfakecamera.c',
 	'arvrealtime.c',
-	'arvxmlschema.c'
+	'arvxmlschema.c',
+	'aldinvoker.c'
 ]
 
 library_no_introspection_sources = [
@@ -156,7 +157,8 @@ library_headers = [
 	'arvsystem.h',
 	'arvrealtime.h',
 	'arvstream.h',
-	'arvxmlschema.h'
+	'arvxmlschema.h',
+	'aldinvoker.h'
 ]
 
 library_private_headers = [

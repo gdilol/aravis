@@ -40,36 +40,50 @@ G_BEGIN_DECLS
  */
 typedef enum
 {
+    ALD_INVOKER_BUFFER_INPLACE = 0,
     ALD_INVOKER_BUFFER_COPY,
-    ALD_INVOKER_BUFFER_INPLACE
+    ALD_INVOKER_BUFFER_DEFAULT = ALD_INVOKER_BUFFER_INPLACE
 } AldInvokerBufferStrategy;
+
+typedef enum
+{
+    ALD_INVOKER_ACQUISITION_STRATEGY_CONTINUOUS_RUN = 0,
+    ALD_INVOKER_ACQUISITION_STRATEGY_SOFTWARETRIGGER,
+    ALD_INVOKER_ACQUISITION_STRATEGY_HARDWARETRIGGER
+} AldInvokerAcquisitionStrategy;
 
 typedef struct
 {
     /* data */
-    void *buf;
     void *data;
+    ArvPixelFormat format;
     int width;
     int height;
-    int stride;
-    int channel;
-    gboolean disposed;//never used
+    guint64 system_stamp;
+    gboolean is_copy;
+    gboolean disposed; // never use
 } AldBufferInfo;
 
-typedef void (*AldInvokerCallback)(AldBufferInfo* info);
+typedef void (*AldInvokerCallback)(AldBufferInfo info);
 
-#define ALD_TYPE_INVOKER (ald_invoker_get_type())
+#define ALD_TYPE_INVOKER ald_invoker_get_type()
 
 ARV_API G_DECLARE_FINAL_TYPE(AldInvoker, ald_invoker, ALD, INVOKER, GObject);
 
-ARV_API AldInvoker *ald_invoker_new(ArvCamera *camera);
+ARV_API AldInvoker *ald_invoker_new(ArvCamera *camera, AldInvokerCallback cb);
 
-ARV_API int ald_invoker_get_buffer_count(AldInvoker* invoker);
+ARV_API void ald_invoker_set_buffer_count(AldInvoker *invoker, int buffer_count);
 
-ARV_API void ald_invoker_set_buffer_count(AldInvoker* invoker, int buffer_count);
+ARV_API void ald_invoker_set_acquisition_strategy(AldInvoker *invoker, AldInvokerAcquisitionStrategy strategy, GError** error);
 
-ARV_API void ald_invoker_camera_updated();
+ARV_API void ald_invoker_set_buffer_strategy(AldInvoker *invoker, AldInvokerBufferStrategy strategy);
 
-ARV_API ArvStream *ald_invoker_create_stream(AldInvoker *invoker, AldInvokerBufferStrategy strategy);
+ARV_API void ald_invoker_set_frame_count_per_trigger(AldInvoker *invoker, int count);
+
+ARV_API void ald_invoker_start_acquisition(AldInvoker *invoker, GError** error);
+
+ARV_API void ald_invoker_stop_acquisition(AldInvoker *invoker);
+
+ARV_API void ald_invoker_reset(AldInvoker *invoker);
 
 G_END_DECLS

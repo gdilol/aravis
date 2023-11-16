@@ -105,6 +105,8 @@
 #include <arvstr.h>
 #include <arvsystem.h>
 
+#include <aldinvoker.h>
+
 #if ARAVIS_HAS_USB
 #include <arvuvinterface.h>
 #include <arvuvdevice.h>
