@@ -75,15 +75,15 @@ ARV_API AldInvoker *ald_invoker_new(ArvCamera *camera, AldInvokerCallback cb);
 
 ARV_API void ald_invoker_set_buffer_count(AldInvoker *invoker, int buffer_count);
 
-ARV_API void ald_invoker_set_acquisition_strategy(AldInvoker *invoker, AldInvokerAcquisitionStrategy strategy, GError** error);
+ARV_API void ald_invoker_set_acquisition_strategy(AldInvoker *invoker, AldInvokerAcquisitionStrategy strategy, GError **error);
 
-ARV_API void ald_invoker_set_hardware_trigger_source(AldInvoker *invoker, char *source, GError **error)
+ARV_API void ald_invoker_set_hardware_trigger_source(AldInvoker *invoker, const char *source, GError **error);
 
 ARV_API void ald_invoker_set_buffer_strategy(AldInvoker *invoker, AldInvokerBufferStrategy strategy);
 
 ARV_API void ald_invoker_set_frame_count_per_trigger(AldInvoker *invoker, int count);
 
-ARV_API void ald_invoker_start_acquisition(AldInvoker *invoker, GError** error);
+ARV_API void ald_invoker_start_acquisition(AldInvoker *invoker, GError **error);
 
 ARV_API void ald_invoker_stop_acquisition(AldInvoker *invoker);
 
