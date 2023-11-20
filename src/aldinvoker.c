@@ -82,7 +82,14 @@ void ald_invoker_set_buffer_count(AldInvoker *invoker, int buffer_count)
     }
 }
 
-
+void ald_invoker_set_hardware_trigger_source(AldInvoker *invoker, const char *source, GError **error)
+{
+    if (invoker->hardware_trigger_source != NULL)
+    {
+        g_free(invoker->hardware_trigger_source);
+    }
+    invoker->hardware_trigger_source = source;
+}
 
 void ald_invoker_set_acquisition_strategy(AldInvoker *invoker, AldInvokerAcquisitionStrategy strategy, GError **error)
 {
@@ -103,7 +110,7 @@ void ald_invoker_set_acquisition_strategy(AldInvoker *invoker, AldInvokerAcquisi
         break;
     case ALD_INVOKER_ACQUISITION_STRATEGY_HARDWARETRIGGER:
         arv_camera_set_trigger(camera, "FrameBurstStart", error);
-        g_return_if_fail(invoker->hardware_trigger_source!=NULL);
+        g_return_if_fail(invoker->hardware_trigger_source != NULL);
         arv_camera_set_trigger_source(camera, invoker->hardware_trigger_source, error);
         break;
     default:
@@ -169,7 +176,7 @@ static void CopyStreamCallback(void *user_data, ArvStreamCallbackType type, ArvB
     info.height = arv_buffer_get_image_height(buf);
     info.system_stamp = arv_buffer_get_system_timestamp(buf);
     info.is_copy = invoker->buf_strategy == ALD_INVOKER_BUFFER_COPY;
-    arv_stream_push_buffer(invoker->current_stream,buf);
+    arv_stream_push_buffer(invoker->current_stream, buf);
     invoker->cb(info);
 }
 
@@ -189,6 +196,6 @@ static void InPlaceStreamCallback(void *user_data, ArvStreamCallbackType type, A
     info.height = arv_buffer_get_image_height(buf);
     info.system_stamp = arv_buffer_get_system_timestamp(buf);
     info.is_copy = invoker->buf_strategy == ALD_INVOKER_BUFFER_COPY;
-    arv_stream_push_buffer(invoker->current_stream,buf);
+    arv_stream_push_buffer(invoker->current_stream, buf);
     invoker->cb(info);
 }
