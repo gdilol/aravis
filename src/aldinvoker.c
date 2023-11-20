@@ -31,11 +31,29 @@ struct _AldInvoker
     ArvStream *current_stream;
     AldInvokerCallback cb;
     AldInvokerAcquisitionStrategy acq_strategy;
+    char *hardware_trigger_source;
     AldInvokerBufferStrategy buf_strategy;
     int buffer_count;
 };
 
 G_DEFINE_FINAL_TYPE(AldInvoker, ald_invoker, G_TYPE_OBJECT);
+
+static void ald_invoker_class_init(AldInvokerClass *klass)
+{
+    ;
+}
+static void ald_invoker_init(AldInvoker *instance)
+{
+    instance->camera = NULL;
+    instance->current_stream = NULL;
+    instance->cb = NULL;
+    instance->acq_strategy = ALD_INVOKER_ACQUISITION_STRATEGY_CONTINUOUS_RUN;
+    instance->buf_strategy = ALD_INVOKER_BUFFER_DEFAULT;
+    instance->buffer_count = 4;
+}
+
+static void CopyStreamCallback(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
+static void InPlaceStreamCallback(void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer);
 
 /**
  * @brief construct a invoker class which provides fast reach to deal with the buffer
@@ -48,6 +66,7 @@ AldInvoker *ald_invoker_new(ArvCamera *camera, AldInvokerCallback cb)
     AldInvoker *invoker = g_object_new(ALD_TYPE_INVOKER, NULL);
     invoker->camera = camera;
     invoker->cb = cb;
+    return invoker;
 }
 
 void ald_invoker_set_buffer_count(AldInvoker *invoker, int buffer_count)
@@ -62,6 +81,8 @@ void ald_invoker_set_buffer_count(AldInvoker *invoker, int buffer_count)
         arv_stream_push_buffer(invoker->current_stream, arv_buffer_new(size, NULL));
     }
 }
+
+
 
 void ald_invoker_set_acquisition_strategy(AldInvoker *invoker, AldInvokerAcquisitionStrategy strategy, GError **error)
 {
@@ -82,7 +103,8 @@ void ald_invoker_set_acquisition_strategy(AldInvoker *invoker, AldInvokerAcquisi
         break;
     case ALD_INVOKER_ACQUISITION_STRATEGY_HARDWARETRIGGER:
         arv_camera_set_trigger(camera, "FrameBurstStart", error);
-        arv_camera_set_trigger_source(camera, "Line1", error);
+        g_return_if_fail(invoker->hardware_trigger_source!=NULL);
+        arv_camera_set_trigger_source(camera, invoker->hardware_trigger_source, error);
         break;
     default:
         break;
@@ -137,15 +159,17 @@ static void CopyStreamCallback(void *user_data, ArvStreamCallbackType type, ArvB
     ArvBuffer *buf = arv_stream_pop_buffer(invoker->current_stream);
     g_return_if_fail(ARV_IS_BUFFER(buffer));
     size_t size;
-    void *src = arv_buffer_get_image_data(buf,&size); 
+    const void *src = arv_buffer_get_image_data(buf, &size);
     gpointer des = g_malloc(size);
-    memcpy_s(des,size,src,size);
+    memcpy_s(des, size, src, size);
     info.data = des;
+    info.size = size;
     info.format = arv_buffer_get_image_pixel_format(buf);
     info.width = arv_buffer_get_image_width(buf);
     info.height = arv_buffer_get_image_height(buf);
     info.system_stamp = arv_buffer_get_system_timestamp(buf);
     info.is_copy = invoker->buf_strategy == ALD_INVOKER_BUFFER_COPY;
+    arv_stream_push_buffer(invoker->current_stream,buf);
     invoker->cb(info);
 }
 
@@ -157,12 +181,14 @@ static void InPlaceStreamCallback(void *user_data, ArvStreamCallbackType type, A
     ArvBuffer *buf = arv_stream_pop_buffer(invoker->current_stream);
     g_return_if_fail(ARV_IS_BUFFER(buffer));
     size_t size;
-    void *src = arv_buffer_get_image_data(buf,&size); 
+    const void *src = arv_buffer_get_image_data(buf, &size);
     info.data = src;
+    info.size = size;
     info.format = arv_buffer_get_image_pixel_format(buf);
     info.width = arv_buffer_get_image_width(buf);
     info.height = arv_buffer_get_image_height(buf);
     info.system_stamp = arv_buffer_get_system_timestamp(buf);
     info.is_copy = invoker->buf_strategy == ALD_INVOKER_BUFFER_COPY;
+    arv_stream_push_buffer(invoker->current_stream,buf);
     invoker->cb(info);
 }
